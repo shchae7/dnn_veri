@@ -20,9 +20,9 @@ def convert(file_path, file_format, dest_path, variant):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--file_path', default='./nnet/mnist10x10.nnet')
+    parser.add_argument('--file_path', default='./nnet/simplified_mnist10x10.nnet')
     parser.add_argument('--file_format', default='nnet')
-    parser.add_argument('--dest_path', default='./fol/mnist10x10')
+    parser.add_argument('--dest_path', default='./fol/simplified_mnist10x10')
     parser.add_argument('--variant', default='python')
 
     config = parser.parse_args()
