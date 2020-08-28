@@ -6,7 +6,7 @@ from utils.readNNet import readNNet
 
 def nnet_converter_python(file_path, dest_path):
     # Get nnet info
-    weights, biases, numLayers, layerSizes = readNNet(file_path)
+    weights, biases, numLayers, layerSizes, inputMins, inputMaxes = readNNet(file_path)
 
     fol_file = open(dest_path, 'w')
     fol_file.write('from z3 import *\n\n')
@@ -48,13 +48,12 @@ def nnet_converter_python(file_path, dest_path):
         passedNodes += layerSizes[i - 1]
 
     # Input Constraints
-
-    # Property Constraints
-
-
+    inputSize = weights[0].shape[1]
+    for i in range(0, inputSize):
+        min_constraint = 'x' + str(i) + ' >= ' + str(inputMins[i])
+        max_constraint = 'x' + str(i) + ' <= ' + str(inputMaxes[i])
+        fol_file.write('s.add(' + min_constraint + ' , ' + max_constraint + ')\n')
     fol_file.write('\n')
-    fol_file.write('print(s.check())\n')
-    fol_file.write('print(s.model())\n')
 
     fol_file.close()
 

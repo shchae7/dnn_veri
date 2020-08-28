@@ -77,4 +77,4 @@ def readNNet(nnetFile, withNorm=False):
 
     if withNorm:
         return weights, biases, inputMins, inputMaxes, means, ranges
-    return weights, biases, numLayers, layerSizes
+    return weights, biases, numLayers, layerSizes, inputMins, inputMaxes
