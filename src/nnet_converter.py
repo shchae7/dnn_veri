@@ -34,6 +34,7 @@ def nnet_converter_python(file_path, dest_path):
 
             # ReLU activation function -->  (zi >= 0 /\ xi == zi) \/ (zi < 0 /\ xi == 0) /\ (zi == axi-1 + bxi-2 ...)
             index = str(passedNodes + j)
+            fol_file.write('z' + index + ' = Real(\'z' + index + '\')\n')
             fol_file.write('s.add(z' + index + ' == ' + eq + ')\n')
 
             leftconstraint = 'x' + index + '_left = And([z' + index + ' >= 0, x' + index + ' == z' + index + '])'
