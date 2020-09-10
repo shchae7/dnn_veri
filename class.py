@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from formula_builder import *
+
 import sys
 sys.path.append('../')
 from utils.readNNet import readNNet
@@ -19,6 +21,10 @@ class Component(ABC):
     @abstractmethod
     def encode(self):
         pass
+
+#    @abstractmethod
+#    def abstract_encode(self):
+#        pass
 
 
 class Network(Component):
@@ -44,11 +50,10 @@ class Network(Component):
         print(self.numLayers)
 
 
-    def encode(self):
+    def encode(self, res_file):
         print('Encoding Network')
         for i in range(self.numLayers):
-            self.layers[i].encode()
-
+            self.layers[i].encode(res_file)
 
 
 class Layer(Component):
@@ -66,10 +71,10 @@ class Layer(Component):
         super().print_info()
 
 
-    def encode(self):
-        print('Encoding ' + str(self.depth) + 'th Layer')
+    def encode(self, res_file):
+        #print('Encoding ' + str(self.depth) + 'th Layer')
         for i in range(self.output_num):
-            self.nodes[i].encode()
+            self.nodes[i].encode(res_file)
 
 
 
@@ -81,26 +86,26 @@ class Node(Component):
         self.depth = d
         self.index = i
 
-        self.fol = ''
-
-
     def print_info(self):
         print(str(self.index) + 'th Node at ' + str(self.depth) + 'th Layer Information')
         super().print_info()
 
 
-    def encode(self): # z3 solver dependent (for now) Only assuming ReLU activation function
-        print('Encoding Node')
-        self.fol += 'x' + str(self.depth) + '_' + str(self.index) + ''
-        print('x' + str(self.depth) + '_' + str(self.index) + ' == ')
+    def encode(self, res_file): # z3 solver dependent (for now) Only assuming ReLU activation function
+        #print('Encoding ' + str(self.index) + 'th Node at ' + str(self.depth) + 'th Layer')
+        res_file.add_variable('x_' + str(self.depth) + '_' + str(self.index))
 
         for i in range(self.input_num):
-            print(str(self.weight[i]) + ' * ' + 'x' + str(self.depth - 1) + '_' + str(i))
+            res_file.add_variable('z_' + str(self.depth) + '_' + str(self.index))
 
 
 if __name__ == '__main__':
     weights, biases, numLayers, layerSizes, inputMins, inputMaxes = readNNet('./resources/nnet/5_mnist10x10.nnet')
 
     network = Network(layerSizes[0], layerSizes[-1], weights, biases, numLayers, layerSizes, inputMins, inputMaxes)
+    z3_file = Z3File()
 
-    network.encode()
+    network.encode(z3_file)
+
+    z3_file.write_file('./result/class_builder_test.py')
+
