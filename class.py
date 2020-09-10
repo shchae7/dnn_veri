@@ -106,6 +106,5 @@ if __name__ == '__main__':
     z3_file = Z3File()
 
     network.encode(z3_file)
-
     z3_file.write_file('./result/class_builder_test.py')
 
