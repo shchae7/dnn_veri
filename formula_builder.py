@@ -1,37 +1,63 @@
+from z3 import *
+
 class Z3File():
-    def __init__(self):
+    def __init__(self, layerSizes):
+        self.inputs = []
         self.variables = []
         self.formulas = []
+
+        self.layerSizes = layerSizes
+
+    def add_inputs(self, variable):
+        self.inputs.append(variable)
 
     def add_variable(self, variable):
         self.variables.append(variable)
 
-    def add_formula(self, formula):
-        self.formulas.append(formula)
+    def add_formula(self, formula_info):
+        self.formulas.append(formula_info)
+
 
     # Solve without file I/O
     def solve(self):
+        s = Solver()
 
+        # Declare input variables using list comprehensions
+        input_list = [ Real('x_%s_%s' % (self.inputs[i][0], self.inputs[i][1])) for i in range(len(self.inputs)) ]
 
-    # Just in case
-    def write_file(self, dest):
-        res_file = open(dest, 'w')
+        # Declare variables using list comprehensions
+        x_list = [ Real('x_%s_%s' % (self.variables[i][0], self.variables[i][1])) for i in range(len(self.variables)) ]
+        z_list = [ Real('z_%s_%s' % (self.variables[i][0], self.variables[i][1])) for i in range(len(self.variables)) ]
 
-        res_file.write('from z3 import *\n\n')
+        # Add Sig formulas
+        #for i in range(len(self.variables)):
+        #    sig_val = 0
+        #    for j in range(len(self.formulas[i][0])):
+        #        sig_val += formulas[i][0][j] * x_list[]
 
-        # Add variables
+        #    sig_exp = z_list[i] == sig_val
+        #    s.add(sig_exp)
+
+        # For other layers
         for i in range(len(self.variables)):
-            res_file.write(self.variables[i] + ' = Real(' + '\'' + self.variables[i] + '\')\n')
+            if(self.formulas[i][2] == 1): # For the first layer --> takes input as 'input'
+                sig_exp = z_list[i] == Sum([self.formulas[i][0][j] * input_list[j] for j in range(len(self.inputs))]) + self.formulas[i][1]
 
-        res_file.write('s = Solver()\n\n')
+            else:
+                sig_exp = z_list[i] == Sum([self.formulas[i][0][j] * x_list[j + self.layerSizes[self.formulas[i][2]]] for j in range(self.formulas[i][3])]) + self.formulas[i][1]
+            
+            print(sig_exp)
 
-        # Add formulas
-        for i in range(len(self.formulas)):
-            res_file.write('s.add(' + self.formulas[i] + ')\n')
+            s.add(sig_exp)
 
-        res_file.write('\nprint(s.check())\n')
-        res_file.write('print(s.model())\n')
 
-        res_file.close()
+        # Add Or formulas       Assuming ReLU activation function --> Differentiate functions by getting function type as input
+        for i in range(len(self.variables)):
+            left = And(z_list[i] >= 0, x_list[i] == z_list[i])
+            right = And(z_list[i] < 0, x_list[i] == 0)
 
-        print('file written to ' + dest)
+            val = Or(left, right)
+            s.add(val)
+
+        print(s.check())
+        print(s.model())

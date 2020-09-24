@@ -51,7 +51,10 @@ class Network(Component):
 
 
     def encode(self, res_file):
-        print('Encoding Network')
+        #print('Encoding Network')
+        for i in range(self.input_num):
+            res_file.add_inputs([0, i])
+
         for i in range(self.numLayers):
             self.layers[i].encode(res_file)
 
@@ -69,7 +72,8 @@ class Layer(Component):
     def print_info(self):
         print(str(self.depth) + 'th Layer Information')
         super().print_info()
-
+        print(self.weight)
+        print(self.bias)
 
     def encode(self, res_file):
         #print('Encoding ' + str(self.depth) + 'th Layer')
@@ -89,22 +93,25 @@ class Node(Component):
     def print_info(self):
         print(str(self.index) + 'th Node at ' + str(self.depth) + 'th Layer Information')
         super().print_info()
+        print(self.weight)
+        print(self.bias)
 
 
     def encode(self, res_file): # z3 solver dependent (for now) Only assuming ReLU activation function
         #print('Encoding ' + str(self.index) + 'th Node at ' + str(self.depth) + 'th Layer')
-        res_file.add_variable('x_' + str(self.depth) + '_' + str(self.index))
 
-        for i in range(self.input_num):
-            res_file.add_variable('z_' + str(self.depth) + '_' + str(self.index))
-
+        res_file.add_variable([self.depth, self.index])
+        res_file.add_formula([self.weight, self.bias, self.depth, self.input_num])
+        
 
 if __name__ == '__main__':
-    weights, biases, numLayers, layerSizes, inputMins, inputMaxes = readNNet('./resources/nnet/5_mnist10x10.nnet')
+    weights, biases, numLayers, layerSizes, inputMins, inputMaxes = readNNet('./resources/nnet/3_mnist10x10.nnet')
 
     network = Network(layerSizes[0], layerSizes[-1], weights, biases, numLayers, layerSizes, inputMins, inputMaxes)
-    z3_file = Z3File()
+    z3_file = Z3File(layerSizes)
 
     network.encode(z3_file)
-    z3_file.write_file('./result/class_builder_test.py')
+    z3_file.solve()
 
+
+    #network.layers[0].nodes[0].print_info()
